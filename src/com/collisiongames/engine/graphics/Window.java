@@ -13,16 +13,21 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
-public class Window {
+import com.collisiongames.engine.util.IDestroyAble;
+
+public class Window implements IDestroyAble {
 
 	public String name;
+	public final int GL_MAJOR, GL_MINOR;
 	public int width, height;
 	private long window = -1;
 	
-	public Window(String name, int width, int height) {
+	public Window(String name, int width, int height, int gl_major, int gl_minor) {
 		this.name = name;
 		this.width = width;
 		this.height = height;
+		GL_MAJOR = gl_major;
+		GL_MINOR = gl_minor;
 		
 		init();
 		start();
@@ -35,8 +40,13 @@ public class Window {
 			throw new IllegalStateException("Failed to initialize GLFW");
 		
 		glfwDefaultWindowHints();
-		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		
 		
 		window = glfwCreateWindow(width, height, name, NULL, NULL);
 		if(window == NULL)
@@ -59,17 +69,17 @@ public class Window {
 	}
 	
 	public void render() {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 	
 	private void start() {
 		GL.createCapabilities();
-		loop();
+		glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	}
 	
-	public synchronized void stop() {
+	@Override
+	public synchronized void destroy() {
 		glfwFreeCallbacks(window);
 		glfwDestroyWindow(window);
 		
@@ -77,11 +87,17 @@ public class Window {
 		glfwSetErrorCallback(null).free();	
 	}
 
-	public void loop() {
-		while(!glfwWindowShouldClose(window)) {
-			render();
-			glfwPollEvents();
-		}
-		stop();
+	public void prepareRender() {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+	
+//	public static float[] vertices = {// First triangle
+//		     0.5f,  0.5f, 0.0f,  // Top Right
+//		     0.5f, -0.5f, 0.0f,  // Bottom Right
+//		    -0.5f,  0.5f, 0.0f  // Top Left 
+//		    };
+	
+	public boolean shouldClose() {
+		return glfwWindowShouldClose(window);
 	}
 }

@@ -22,10 +22,12 @@ public class VertexArray implements IDestroyAble {
 			throw new IllegalStateException("A VAO can't have more than 16 VBO's!");
 		
 		ID = glGenVertexArrays();
+		this.vbos = vbos;
 		
 		glBindVertexArray(ID);
 		
 		for(int i = 0; i < vbos.length; i++) {
+			
 			VertexBuffer buffer = vbos[i];
 			glBindBuffer(GL_ARRAY_BUFFER, buffer.ID);
 			
